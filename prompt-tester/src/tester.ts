@@ -31,6 +31,44 @@ interface CaseResult {
   notes: string;
 }
 
+const STOPWORDS = new Set([
+  "a",
+  "as",
+  "o",
+  "os",
+  "e",
+  "de",
+  "do",
+  "da",
+  "dos",
+  "das",
+  "em",
+  "no",
+  "na",
+  "nos",
+  "nas",
+  "um",
+  "uma",
+  "uns",
+  "umas",
+  "para",
+  "por",
+  "com",
+  "sem",
+]);
+
+function tokenizeWords(text: string): string[] {
+  return (
+    text
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLowerCase()
+      .match(/[\p{L}\p{N}]+/gu) ?? []
+  );
+}
+
+=======
+
 function parseArgs(argv: string[]): CliOptions {
   const getValue = (flag: string): string | undefined => {
     const idx = argv.indexOf(flag);
@@ -126,21 +164,30 @@ function evaluateCase(item: CaseItem, output: string): { pass: boolean; notes: s
     return { pass: true, notes: "Sem critério esperado explícito." };
   }
 
-  const expectedTokens = item.expected
-    .toLowerCase()
-    .split(/[\s,.;:!?]+/)
-    .filter(Boolean)
-    .slice(0, 6);
+  const expectedTokens = tokenizeWords(item.expected)
+    .filter((token) => token.length >= 3 && !STOPWORDS.has(token))
+    .slice(0, 8);
 
-  const normalizedOutput = output.toLowerCase();
-  const matched = expectedTokens.filter((t) => normalizedOutput.includes(t)).length;
-  const ratio = expectedTokens.length > 0 ? matched / expectedTokens.length : 1;
+  const outputWords = new Set(tokenizeWords(output));
+  const matchedTokens = expectedTokens.filter((token) => outputWords.has(token));
 
-  if (ratio >= 0.5) {
-    return { pass: true, notes: `Cobertura de expectativa: ${(ratio * 100).toFixed(0)}%` };
+  if (expectedTokens.length === 0) {
+    return { pass: true, notes: "Sem tokens relevantes após normalização." };
   }
 
-  return { pass: false, notes: `Baixa cobertura da expectativa (${(ratio * 100).toFixed(0)}%).` };
+  const ratio = matchedTokens.length / expectedTokens.length;
+
+  if (ratio >= 0.5) {
+    return {
+      pass: true,
+      notes: `Cobertura de expectativa: ${(ratio * 100).toFixed(0)}% (${matchedTokens.length}/${expectedTokens.length})`,
+    };
+  }
+
+  return {
+    pass: false,
+    notes: `Baixa cobertura da expectativa (${(ratio * 100).toFixed(0)}%). Esperado: ${expectedTokens.join(", ")}`,
+  };
 }
 
 async function main(): Promise<void> {
