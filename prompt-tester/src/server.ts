@@ -2,7 +2,7 @@ import express from "express";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadCases, runTests } from "./lib/core.js";
+import { loadCases, runTests, buildMockResponse, askAnthropic } from "./lib/core.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -63,6 +63,68 @@ app.post("/api/run", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Multi-turn chat for demo mode
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { prompt: promptFile, messages, mock, apiKey, model } = req.body as {
+      prompt: string;
+      messages: Array<{ role: "user" | "assistant"; content: string }>;
+      mock: boolean;
+      apiKey?: string;
+      model?: string;
+    };
+
+    if (!mock && !apiKey) {
+      res.status(400).json({ error: "API Key obrigatória no modo real." });
+      return;
+    }
+
+    const lastMessage = messages[messages.length - 1].content;
+
+    if (mock) {
+      res.json({ output: buildMockResponse(lastMessage) });
+      return;
+    }
+
+    const promptContent = await readFile(path.join(process.cwd(), "prompts", promptFile), "utf8");
+    const output = await askAnthropic(
+      apiKey as string,
+      model ?? "claude-3-5-haiku-latest",
+      promptContent,
+      lastMessage,
+      220,
+      0.3,
+    );
+
+    res.json({ output });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// List past test runs
+app.get("/api/results", async (_req, res) => {
+  try {
+    const dir = path.join(process.cwd(), "results");
+    const files = await readdir(dir).catch(() => []);
+    const items = await Promise.all(
+      files
+        .filter((f) => f.endsWith(".json"))
+        .sort()
+        .reverse()
+        .slice(0, 30)
+        .map(async (f) => {
+          const raw = await readFile(path.join(dir, f), "utf8");
+          const { metadata } = JSON.parse(raw) as { metadata: Record<string, unknown> };
+          return { file: f, ...metadata };
+        }),
+    );
+    res.json(items);
+  } catch {
+    res.json([]);
   }
 });
 
