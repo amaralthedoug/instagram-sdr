@@ -99,6 +99,19 @@ docs/
 
 ## Testando um prompt antes de publicar
 
+### Interface visual (recomendado)
+
+```bash
+cd prompt-tester
+npm install
+npm run ui
+# abre http://localhost:3000
+```
+
+Selecione o prompt e os casos nos dropdowns, escolha o modo **Simulado** (sem API key) ou **API Real**, e clique em rodar. Os resultados aparecem como bolhas de conversa — igual a um DM real.
+
+### CLI (terminal)
+
 ```bash
 cd prompt-tester
 npm install
