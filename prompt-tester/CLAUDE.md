@@ -1,7 +1,7 @@
 # Prompt Tester CLI
 
 ## Objetivo
-Validar prompts de clientes antes de publicar no ManyChat, com simulações em lote e output estruturado para revisão humana.
+Validar prompts de qualquer nicho antes de publicar no ManyChat, com simulações em lote e output estruturado para revisão humana.
 
 ## Regras
 - Linguagem de saída sempre em Português do Brasil.
@@ -10,7 +10,7 @@ Validar prompts de clientes antes de publicar no ManyChat, com simulações em l
 
 ## Como rodar
 ```bash
-npm run run -- --prompt prompts/estetica-v1.md --cases cases/estetica.json --mock
+npm run run -- --prompt prompts/<nicho>.md --cases cases/<nicho>.json --mock
 ```
 
 Sem `--mock`, o script usa a API da Anthropic com `ANTHROPIC_API_KEY`.
