@@ -108,7 +108,13 @@ npm run ui
 # abre http://localhost:3000
 ```
 
-Selecione o prompt e os casos nos dropdowns, escolha o modo **Simulado** (sem API key) ou **API Real**, e clique em rodar. Os resultados aparecem como bolhas de conversa — igual a um DM real.
+A interface tem três abas:
+
+| Aba | O que faz |
+|---|---|
+| **Testar** | Roda casos em lote, mostra resultado como bolhas de DM, botão exportar PDF |
+| **Demo ao vivo** | Você digita como lead e vê o SDR responder em tempo real — ideal para demonstrar para clientes |
+| **Histórico** | Lista os últimos 30 testes com score, data e nicho |
 
 ### CLI (terminal)
 
