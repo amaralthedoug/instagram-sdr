@@ -17,23 +17,6 @@ Você investe em tráfego pago ou produz conteúdo orgânico. As pessoas chegam 
 
 ---
 
-## Como funciona na prática
-
-```
-Alguém comenta no post ou manda DM
-        ↓
-ManyChat inicia a conversa automaticamente
-        ↓
-IA (Claude) qualifica: entende o interesse, janela de decisão e região
-        ↓
-Lead qualificado → recebe CTA para o WhatsApp da clínica/empresa
-Lead frio → conversa encerrada sem custo humano
-        ↓
-Dados salvos automaticamente (histórico, métricas, status)
-```
-
----
-
 ## Para quem é este projeto
 
 - **Gestor de tráfego** que roda campanhas para clientes e quer entregar mais do que clique — quer entregar lead qualificado.
@@ -55,49 +38,62 @@ Dados salvos automaticamente (histórico, métricas, status)
 
 ---
 
-## O que está neste repositório
-
-Este repo é a **camada de qualificação** — os prompts, a lógica de triagem e o envio do lead qualificado para o backend.
-
-> O backend de entrega (persistência, retry, n8n) é o projeto separado [testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi).
-
-### Estrutura de arquivos
+## Como funciona — do DM ao lead qualificado
 
 ```
-prompt-tester/
-  prompts/          → scripts de conversa por nicho (adicione o seu)
-  cases/            → casos de teste por nicho
-  src/tester.ts     → CLI para simular conversas e validar prompts
-  src/webhook/
-    leadSender.ts   → envia lead qualificado para o backend
-
-skills/
-  instagram-sdr-tone-ptbr/  → guia de tom de voz em PT-BR
-
-docs/
-  architecture.md   → contrato técnico da integração
-  mvp-estetica-e2e.md → exemplo de plano MVP em 10 dias
+Alguém comenta no post ou manda DM
+            ↓
+    ManyChat inicia a conversa
+            ↓
+    IA (Claude) conduz a qualificação:
+      → Qual é o interesse?
+      → Qual é o prazo de decisão?
+      → Qual é a região?
+            ↓
+    ┌─────────────────────┬──────────────────────┐
+    │   Lead qualificado  │     Lead frio        │
+    │  Recebe CTA para    │  Conversa encerrada  │
+    │  o WhatsApp         │  sem custo humano    │
+    └─────────────────────┴──────────────────────┘
+            ↓
+    Lead e histórico salvos automaticamente
 ```
 
 ---
 
-## Pipeline completo (visão técnica)
+## Dois projetos, um pipeline completo
+
+Este repositório cuida da **qualificação**: os prompts, a lógica de triagem e o envio do lead para o backend.
+
+O armazenamento, deduplicação e entrega para automações ficam no projeto irmão **[testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi)**.
+
+| | instagram-sdr (este repo) | [testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi) |
+|---|---|---|
+| **O que faz** | Qualifica o lead no DM e decide se ele é quente | Recebe o lead, armazena, e entrega para suas automações |
+| **Onde roda** | Integrado ao ManyChat via prompt | Servidor próprio com banco de dados |
+| **O que entrega** | Lead triado com interesse, prazo e região | Lead no n8n, planilha, CRM ou WhatsApp — sem perda, com retry |
+
+Para usar os dois juntos, veja a documentação técnica em [`docs/architecture.md`](docs/architecture.md).
+
+---
+
+## O que está neste repositório
 
 ```
-Instagram DM
-    ↓
-ManyChat Pro (fluxo + prompt Claude)
-    ↓
-leadSender.ts  →  POST /webhooks/v1/leads
-    ↓
-testn8nmetaapi
-  - valida, deduplica, persiste no PostgreSQL
-  - retry automático se n8n cair
-    ↓
-n8n → notifica WhatsApp, CRM, planilha, etc.
-```
+prompt-tester/
+  prompts/              → scripts de conversa por nicho (adicione o seu)
+  cases/                → casos de teste por nicho
+  src/tester.ts         → CLI para simular conversas e validar prompts
+  src/webhook/
+    leadSender.ts       → envia o lead qualificado para o testn8nmetaapi
 
-Documentação do contrato de integração: [`docs/architecture.md`](docs/architecture.md)
+skills/
+  instagram-sdr-tone-ptbr/  → guia de tom de voz comercial em PT-BR
+
+docs/
+  architecture.md       → contrato técnico da integração entre os dois projetos
+  mvp-estetica-e2e.md   → exemplo de plano MVP em 10 dias
+```
 
 ---
 
@@ -115,16 +111,6 @@ ANTHROPIC_API_KEY=sua-chave npm run run -- --prompt prompts/estetica-v1.md --cas
 ```
 
 O resultado sai em `prompt-tester/results/` com pass/fail por caso de teste.
-
----
-
-## Variáveis de ambiente
-
-```env
-ANTHROPIC_API_KEY=   # API da Anthropic (para rodar prompt-tester sem --mock)
-BACKEND_URL=         # URL do testn8nmetaapi
-BACKEND_API_KEY=     # chave compartilhada com o testn8nmetaapi
-```
 
 ---
 
@@ -147,6 +133,16 @@ Crie os casos de teste em `prompt-tester/cases/seu-nicho.json` e rode com `--moc
 
 ---
 
+## Variáveis de ambiente
+
+```env
+ANTHROPIC_API_KEY=   # API da Anthropic (para rodar prompt-tester sem --mock)
+BACKEND_URL=         # URL do testn8nmetaapi
+BACKEND_API_KEY=     # chave compartilhada com o testn8nmetaapi
+```
+
+---
+
 ## Projetos relacionados
 
-- [testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi) — backend de entrega: recebe leads, deduplica, persiste e entrega ao n8n com retry automático.
+- **[testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi)** — backend de entrega: recebe leads qualificados, deduplica, persiste no PostgreSQL e entrega ao n8n com retry automático.
