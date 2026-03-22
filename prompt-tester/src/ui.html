@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Tester — instagram-sdr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080808;
+      --surface:   #111111;
+      --surface-2: #161616;
+      --border:    #212121;
+      --border-2:  #2a2a2a;
+      --text:      #f0f0f0;
+      --text-2:    #999999;
+      --muted:     #444444;
+      --pass:      #22c55e;
+      --fail:      #ef4444;
+      --grad:      linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+
+    .layout {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 10px; }
+
+    .logo-diamond {
+      width: 30px; height: 30px;
+      border-radius: 7px;
+      background: var(--grad);
+      display: grid; place-items: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+
+    .logo-name { font-size: 14px; font-weight: 700; letter-spacing: -0.2px; }
+    .logo-name span { color: var(--text-2); font-weight: 400; }
+
+    .version-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px; color: var(--muted);
+      border: 1px solid var(--border-2);
+      padding: 3px 8px; border-radius: 4px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-2); margin-bottom: 7px;
+    }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute; right: 11px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted); pointer-events: none; font-size: 11px;
+    }
+
+    select, input[type="password"] {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      padding: 9px 30px 9px 11px;
+      outline: none; appearance: none; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    select:focus, input[type="password"]:focus { border-color: #7c3aed; }
+
+    .mode-wrap {
+      display: flex;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 8px;
+      padding: 3px; gap: 3px;
+    }
+
+    .mode-btn {
+      flex: 1; padding: 7px 10px; border: none;
+      border-radius: 6px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; background: transparent;
+      color: var(--muted); transition: all 0.15s;
+    }
+
+    .mode-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-2);
+    }
+
+    .api-key-field { margin-top: 14px; display: none; }
+    .api-key-field.show { display: block; }
+
+    .run-btn {
+      width: 100%; margin-top: 20px; padding: 13px;
+      border: none; border-radius: 9px;
+      background: var(--grad); color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .run-btn:hover:not(:disabled) { opacity: 0.88; }
+    .run-btn:active:not(:disabled) { transform: scale(0.99); }
+    .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .error-box {
+      margin-top: 14px;
+      background: #130808; border: 1px solid #3d1111;
+      border-radius: 8px; padding: 11px 14px;
+      color: #f87171;
+      font-family: 'DM Mono', monospace; font-size: 12px;
+      display: none;
+    }
+
+    .error-box.show { display: block; }
+
+    .section-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); margin-bottom: 16px;
+    }
+
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .score-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-counts {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px; color: var(--text-2); min-width: 36px;
+    }
+
+    .score-track {
+      flex: 1; height: 5px;
+      background: var(--border-2); border-radius: 99px; overflow: hidden;
+    }
+
+    .score-fill {
+      height: 100%; background: var(--grad);
+      border-radius: 99px; width: 0%;
+      transition: width 0.7s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .score-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px; font-weight: 500;
+      min-width: 38px; text-align: right;
+    }
+
+    .case-card {
+      border: 1px solid var(--border);
+      border-radius: 11px; overflow: hidden;
+      margin-bottom: 14px;
+      animation: rise 0.28s ease both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .case-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px;
+      background: var(--surface-2); border-bottom: 1px solid var(--border);
+    }
+
+    .case-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+    .verdict { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .verdict.pass { color: var(--pass); }
+    .verdict.fail { color: var(--fail); }
+
+    .case-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    .bubble-wrap { display: flex; flex-direction: column; }
+    .bubble-wrap.lead { align-items: flex-start; }
+    .bubble-wrap.sdr  { align-items: flex-end; }
+
+    .bubble-label {
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--muted); margin-bottom: 4px; padding: 0 2px;
+    }
+
+    .bubble {
+      max-width: 86%; padding: 9px 13px; border-radius: 11px;
+      font-family: 'DM Mono', monospace; font-size: 12.5px; line-height: 1.55;
+    }
+
+    .bubble-wrap.lead .bubble {
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-top-left-radius: 3px; color: var(--text-2);
+    }
+
+    .bubble-wrap.sdr .bubble {
+      background: var(--surface); border: 1px solid rgba(131, 58, 180, 0.35);
+      border-top-right-radius: 3px; color: var(--text);
+    }
+
+    .case-notes {
+      padding: 0 14px 12px;
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      color: var(--muted); line-height: 1.5;
+    }
+
+    .empty {
+      text-align: center; padding: 56px 0; color: var(--muted);
+    }
+
+    .empty-icon { font-size: 28px; margin-bottom: 14px; opacity: 0.35; }
+    .empty-text { font-size: 13px; line-height: 1.7; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.55s linear infinite; flex-shrink: 0;
+    }
+
+    #resultsSection { display: none; }
+  </style>
+</head>
+<body>
+  <div class="layout">
+
+    <header>
+      <div class="logo">
+        <div class="logo-diamond">◆</div>
+        <div class="logo-name">instagram-sdr <span>/ prompt tester</span></div>
+      </div>
+      <div class="version-tag">v0.1</div>
+    </header>
+
+    <div class="card">
+      <div class="form-row">
+        <div class="field">
+          <label>Prompt</label>
+          <div class="select-wrap">
+            <select id="promptSelect"><option value="">carregando...</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Casos</label>
+          <div class="select-wrap">
+            <select id="casesSelect"><option value="">carregando...</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Modo</label>
+        <div class="mode-wrap">
+          <button class="mode-btn active" data-mode="mock" onclick="setMode('mock')">◎ &nbsp;Simulado</button>
+          <button class="mode-btn" data-mode="real" onclick="setMode('real')">⚡ &nbsp;API Real</button>
+        </div>
+      </div>
+
+      <div class="api-key-field" id="apiKeyField">
+        <div class="field" style="margin-top:14px">
+          <label>Anthropic API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-ant-...">
+        </div>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
+
+      <button class="run-btn" id="runBtn" onclick="runTest()">
+        ▶ &nbsp;Rodar simulação
+      </button>
+    </div>
+
+    <div id="resultsSection">
+      <div class="section-label">Resultados</div>
+      <div class="score-row">
+        <span class="score-counts" id="scoreCounts">—</span>
+        <div class="score-track"><div class="score-fill" id="scoreFill"></div></div>
+        <span class="score-pct" id="scorePct">—</span>
+      </div>
+      <div id="resultsList"></div>
+    </div>
+
+    <div id="emptyState" class="empty">
+      <div class="empty-icon">◎</div>
+      <div class="empty-text">Selecione um prompt e rode a simulação<br>para ver as conversas aqui.</div>
+    </div>
+
+  </div>
+  <script>
+    let mode = 'mock';
+
+    async function init() {
+      const [prompts, cases] = await Promise.all([
+        fetch('/api/prompts').then(r => r.json()).catch(() => []),
+        fetch('/api/cases').then(r => r.json()).catch(() => []),
+      ]);
+      fillSelect('promptSelect', prompts, '.md');
+      fillSelect('casesSelect', cases, '.json');
+    }
+
+    function fillSelect(id, files, ext) {
+      const el = document.getElementById(id);
+      el.replaceChildren();
+      if (!files.length) {
+        const opt = document.createElement('option');
+        opt.textContent = 'nenhum arquivo encontrado';
+        el.appendChild(opt);
+        return;
+      }
+      files.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f.replace(ext, '');
+        el.appendChild(opt);
+      });
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.mode-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.mode === m)
+      );
+      document.getElementById('apiKeyField').classList.toggle('show', m === 'real');
+    }
+
+    async function runTest() {
+      const prompt = document.getElementById('promptSelect').value;
+      const cases  = document.getElementById('casesSelect').value;
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const errBox = document.getElementById('errorBox');
+
+      errBox.classList.remove('show');
+
+      if (!prompt || !cases) return showErr('Selecione prompt e casos.');
+      if (mode === 'real' && !apiKey) return showErr('Informe a API Key para o modo real.');
+
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      btn.replaceChildren();
+      const spinner = document.createElement('div');
+      spinner.className = 'spinner';
+      btn.appendChild(spinner);
+      btn.appendChild(document.createTextNode(' Rodando...'));
+
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('resultsSection').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, cases, mock: mode === 'mock', apiKey: apiKey || undefined }),
+        });
+        const data = await res.json();
+        if (!res.ok) return showErr(data.error || 'Erro desconhecido.');
+        render(data);
+      } catch (e) {
+        showErr(e.message);
+      } finally {
+        btn.disabled = false;
+        btn.replaceChildren();
+        btn.appendChild(document.createTextNode('▶ \u00a0Rodar simulação'));
+      }
+    }
+
+    function render({ results, passed, total, score }) {
+      document.getElementById('resultsSection').style.display = 'block';
+
+      document.getElementById('scoreCounts').textContent = passed + '/' + total;
+      document.getElementById('scorePct').textContent = score + '%';
+      setTimeout(() => { document.getElementById('scoreFill').style.width = score + '%'; }, 40);
+
+      const list = document.getElementById('resultsList');
+      list.replaceChildren();
+
+      results.forEach((r, i) => {
+        const card = document.createElement('div');
+        card.className = 'case-card';
+        card.style.animationDelay = (i * 70) + 'ms';
+
+        // Header
+        const head = document.createElement('div');
+        head.className = 'case-head';
+        const idEl = document.createElement('span');
+        idEl.className = 'case-id';
+        idEl.textContent = r.id;
+        const verdict = document.createElement('span');
+        verdict.className = 'verdict ' + (r.pass ? 'pass' : 'fail');
+        verdict.textContent = r.pass ? '✓ passou' : '✗ falhou';
+        head.append(idEl, verdict);
+
+        // Body
+        const body = document.createElement('div');
+        body.className = 'case-body';
+        body.append(makeBubble('lead', 'Lead', r.input), makeBubble('sdr', 'SDR', r.output));
+
+        // Notes
+        const notes = document.createElement('div');
+        notes.className = 'case-notes';
+        notes.textContent = r.notes;
+
+        card.append(head, body, notes);
+        list.appendChild(card);
+      });
+    }
+
+    function makeBubble(side, label, text) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bubble-wrap ' + side;
+      const lbl = document.createElement('div');
+      lbl.className = 'bubble-label';
+      lbl.textContent = label;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      wrap.append(lbl, bubble);
+      return wrap;
+    }
+
+    function showErr(msg) {
+      const box = document.getElementById('errorBox');
+      box.textContent = '⚠ ' + msg;
+      box.classList.add('show');
+      document.getElementById('emptyState').style.display = 'block';
+      const btn = document.getElementById('runBtn');
+      btn.disabled = false;
+      btn.replaceChildren();
+      btn.appendChild(document.createTextNode('▶ \u00a0Rodar simulação'));
+    }
+
+    init();
+  </script>
+</body>
+</html>
