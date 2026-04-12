@@ -54,8 +54,9 @@
     .field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); margin-bottom: 7px; }
     .select-wrap { position: relative; }
     .select-wrap::after { content: '▾'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; font-size: 11px; }
-    select, input[type="password"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12.5px; padding: 9px 30px 9px 11px; outline: none; appearance: none; cursor: pointer; transition: border-color 0.15s; }
-    select:focus, input[type="password"]:focus { border-color: #7c3aed; }
+    select, input[type="password"], input[type="text"] { width: 100%; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12.5px; padding: 9px 30px 9px 11px; outline: none; appearance: none; cursor: pointer; transition: border-color 0.15s; }
+    select:focus, input[type="password"]:focus, input[type="text"]:focus { border-color: #7c3aed; }
+    input[type="text"] { padding-right: 11px; cursor: text; }
 
     /* Mode toggle */
     .mode-wrap { display: flex; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; padding: 3px; gap: 3px; }
@@ -165,6 +166,13 @@
     .history-counts { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text-2); white-space: nowrap; }
     .history-loading { text-align: center; padding: 40px 0; color: var(--muted); font-size: 13px; }
 
+    /* ── WEBHOOK TAB ── */
+    .wh-form { display: flex; flex-direction: column; gap: 14px; }
+    .wh-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .wh-result { margin-top: 16px; border-radius: 10px; padding: 14px 16px; font-family: 'DM Mono', monospace; font-size: 12.5px; line-height: 1.6; display: none; }
+    .wh-result.ok  { display: block; background: #071a0e; border: 1px solid #14532d; color: #4ade80; }
+    .wh-result.err { display: block; background: #130808; border: 1px solid #3d1111; color: #f87171; }
+
     /* Print */
     @media print {
       body { background: white; color: #111; }
@@ -195,6 +203,7 @@
       <button class="tab-btn active" onclick="switchTab('tester')">Testar</button>
       <button class="tab-btn" onclick="switchTab('demo')">Demo ao vivo</button>
       <button class="tab-btn" onclick="switchTab('historico')">Histórico</button>
+      <button class="tab-btn" onclick="switchTab('webhook')">Enviar Lead</button>
     </nav>
 
     <!-- ── TAB: TESTAR ── -->
@@ -288,6 +297,46 @@
       </div>
     </div>
 
+    <!-- ── TAB: WEBHOOK ── -->
+    <div id="tab-webhook" class="tab-content">
+      <div class="card">
+        <div class="section-label" style="margin-bottom:18px">Dados do lead</div>
+        <div class="wh-form">
+          <div class="wh-row">
+            <div class="field">
+              <label>Handle Instagram</label>
+              <input type="text" id="wh-handle" placeholder="@usuario">
+            </div>
+            <div class="field">
+              <label>WhatsApp</label>
+              <input type="text" id="wh-whatsapp" placeholder="11999999999">
+            </div>
+          </div>
+          <div class="field">
+            <label>Primeira mensagem</label>
+            <input type="text" id="wh-firstMessage" placeholder="Ex: Oi, quero saber sobre botox">
+          </div>
+          <div class="wh-row">
+            <div class="field">
+              <label>Procedimento</label>
+              <input type="text" id="wh-procedimento" placeholder="Ex: limpeza de pele">
+            </div>
+            <div class="field">
+              <label>Janela de decisão</label>
+              <input type="text" id="wh-janela" placeholder="Ex: este mês">
+            </div>
+          </div>
+          <div class="field">
+            <label>Região</label>
+            <input type="text" id="wh-regiao" placeholder="Ex: Vila Madalena, SP">
+          </div>
+        </div>
+        <div class="error-box" id="wh-errorBox"></div>
+        <div class="wh-result" id="wh-result"></div>
+        <button class="run-btn" id="wh-btn" onclick="sendLead()">▶ &nbsp;Enviar Lead</button>
+      </div>
+    </div>
+
     <!-- ── TAB: HISTÓRICO ── -->
     <div id="tab-historico" class="tab-content">
       <div class="section-label">Últimos testes</div>
@@ -333,7 +382,7 @@
     // ── Tabs ──
     function switchTab(name) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        const names = ['tester','demo','historico'];
+        const names = ['tester','demo','historico','webhook'];
         b.classList.toggle('active', names[i] === name);
       });
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -576,6 +625,65 @@
       });
 
       content.appendChild(list);
+    }
+
+    // ── Webhook ──
+    async function sendLead() {
+      const handle      = document.getElementById('wh-handle').value.trim();
+      const firstMessage= document.getElementById('wh-firstMessage').value.trim();
+      const procedimento= document.getElementById('wh-procedimento').value.trim();
+      const janela      = document.getElementById('wh-janela').value.trim();
+      const regiao      = document.getElementById('wh-regiao').value.trim();
+      const whatsapp    = document.getElementById('wh-whatsapp').value.trim();
+      const errBox      = document.getElementById('wh-errorBox');
+      const result      = document.getElementById('wh-result');
+      errBox.classList.remove('show');
+      result.className  = 'wh-result';
+
+      if (!handle || !firstMessage || !procedimento || !janela || !regiao) {
+        return showErr(errBox, 'Preencha todos os campos obrigatórios (exceto WhatsApp).');
+      }
+
+      const btn = document.getElementById('wh-btn');
+      setLoadingWebhook(btn, true);
+
+      try {
+        const body = { handle, firstMessage, procedimento, janela, regiao };
+        if (whatsapp) body.whatsapp = whatsapp;
+
+        const res = await fetch('/api/webhook/manychat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          result.className = 'wh-result ok';
+          result.textContent = '✓ Lead enviado com sucesso!';
+        } else {
+          result.className = 'wh-result err';
+          result.textContent = '⚠ ' + (data.error || 'Erro desconhecido.');
+        }
+      } catch (e) {
+        result.className = 'wh-result err';
+        result.textContent = '⚠ ' + e.message;
+      } finally {
+        setLoadingWebhook(btn, false);
+      }
+    }
+
+    function setLoadingWebhook(btn, loading) {
+      btn.disabled = loading;
+      btn.replaceChildren();
+      if (loading) {
+        const s = document.createElement('div');
+        s.className = 'spinner';
+        btn.appendChild(s);
+        btn.appendChild(document.createTextNode(' Enviando...'));
+      } else {
+        btn.appendChild(document.createTextNode('▶ \u00a0Enviar Lead'));
+      }
     }
 
     // ── Helpers ──

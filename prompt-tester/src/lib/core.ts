@@ -140,7 +140,7 @@ export async function runTests(options: {
     casesFile,
     mock,
     apiKey,
-    model = "claude-3-5-haiku-latest",
+    model = "claude-haiku-4-5-20251001",
     maxTokens = 220,
     temperature = 0.3,
   } = options;

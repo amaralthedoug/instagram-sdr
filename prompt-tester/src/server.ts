@@ -3,13 +3,14 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadCases, runTests, buildMockResponse, askAnthropic } from "./lib/core.js";
+import { sendQualifiedLead } from "./webhook/leadSender.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
 app.get("/", (_req, res) => {
-  res.sendFile(path.join(__dirname, "ui.html"));
+  res.sendFile(path.join(process.cwd(), "src", "ui.html"));
 });
 
 app.get("/api/prompts", async (_req, res) => {
@@ -32,13 +33,15 @@ app.get("/api/cases", async (_req, res) => {
 
 app.post("/api/run", async (req, res) => {
   try {
-    const { prompt: promptFile, cases: casesFile, mock, apiKey, model } = req.body as {
+    const { prompt: promptFile, cases: casesFile, mock, apiKey: bodyApiKey, model } = req.body as {
       prompt: string;
       cases: string;
       mock: boolean;
       apiKey?: string;
       model?: string;
     };
+
+    const apiKey = bodyApiKey ?? process.env.ANTHROPIC_API_KEY;
 
     if (!mock && !apiKey) {
       res.status(400).json({ error: "API Key obrigatória no modo real." });
@@ -69,13 +72,15 @@ app.post("/api/run", async (req, res) => {
 // Multi-turn chat for demo mode
 app.post("/api/chat", async (req, res) => {
   try {
-    const { prompt: promptFile, messages, mock, apiKey, model } = req.body as {
+    const { prompt: promptFile, messages, mock, apiKey: bodyApiKey, model } = req.body as {
       prompt: string;
       messages: Array<{ role: "user" | "assistant"; content: string }>;
       mock: boolean;
       apiKey?: string;
       model?: string;
     };
+
+    const apiKey = bodyApiKey ?? process.env.ANTHROPIC_API_KEY;
 
     if (!mock && !apiKey) {
       res.status(400).json({ error: "API Key obrigatória no modo real." });
@@ -92,7 +97,7 @@ app.post("/api/chat", async (req, res) => {
     const promptContent = await readFile(path.join(process.cwd(), "prompts", promptFile), "utf8");
     const output = await askAnthropic(
       apiKey as string,
-      model ?? "claude-3-5-haiku-latest",
+      model ?? "claude-haiku-4-5-20251001",
       promptContent,
       lastMessage,
       220,
@@ -125,6 +130,48 @@ app.get("/api/results", async (_req, res) => {
     res.json(items);
   } catch {
     res.json([]);
+  }
+});
+
+// ManyChat webhook — receives qualified lead and forwards to testn8nmetaapi
+app.post("/api/webhook/manychat", async (req, res) => {
+  const secret = req.headers["x-webhook-secret"];
+  if (process.env.WEBHOOK_SECRET && secret !== process.env.WEBHOOK_SECRET) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const { handle, instaId, firstMessage, procedimento, janela, regiao, whatsapp } = req.body as {
+    handle: string;
+    instaId?: string;
+    firstMessage: string;
+    procedimento: string;
+    janela: string;
+    regiao: string;
+    whatsapp?: string;
+  };
+
+  if (!handle || !firstMessage || !procedimento || !janela || !regiao) {
+    res.status(400).json({ error: "Campos obrigatórios: handle, firstMessage, procedimento, janela, regiao" });
+    return;
+  }
+
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    let resumo: string;
+
+    if (apiKey) {
+      const system = "Você gera resumos concisos de leads qualificados para uma clínica. Responda em português, máximo 2 frases diretas, sem saudação.";
+      const user = `Handle: ${handle}. Procedimento: ${procedimento}. Janela de decisão: ${janela}. Região: ${regiao}. WhatsApp: ${whatsapp ?? "não informado"}. Primeira mensagem: "${firstMessage}".`;
+      resumo = await askAnthropic(apiKey, "claude-haiku-4-5-20251001", system, user, 150, 0.3);
+    } else {
+      resumo = `Lead interessado em ${procedimento}, janela de decisão: ${janela}, região: ${regiao}.`;
+    }
+
+    await sendQualifiedLead({ handle, instaId, firstMessage, procedimento, janela, regiao, whatsapp, resumo });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
   }
 });
 

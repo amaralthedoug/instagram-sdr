@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: instagram-sdr
+    runtime: node
+    rootDir: prompt-tester
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: BACKEND_API_KEY
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
