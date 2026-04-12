@@ -1,5 +1,9 @@
 # instagram-sdr
 
+> ⚠️ **Este repositório foi arquivado.** Toda a funcionalidade foi incorporada ao [testn8nmetaapi](https://github.com/amaralthedoug/testn8nmetaapi). Use aquele repositório para desenvolvimento.
+
+---
+
 **Transforme o DM do Instagram em uma máquina de qualificação de leads — sem atendente humano para cada mensagem.**
 
 Você investe em tráfego pago ou produz conteúdo orgânico. As pessoas chegam no seu perfil, mandam DM, perguntam preço — e a maioria some antes de você responder. Este projeto resolve isso: um SDR (vendedor de qualificação) rodando no Instagram, 24h, que conversa, filtra quem tem intenção real de compra e encaminha para o seu WhatsApp só os leads quentes.
