@@ -508,8 +508,11 @@
           }),
         });
         const data = await res.json();
+        if (!res.ok) { typing.remove(); return showErr(errBox, data.error || 'Erro desconhecido.'); }
+        // Keep typing indicator visible for a duration proportional to response length
+        const typingDelay = Math.min(Math.max(data.output.length * 18, 800), 2800);
+        await new Promise(r => setTimeout(r, typingDelay));
         typing.remove();
-        if (!res.ok) return showErr(errBox, data.error || 'Erro desconhecido.');
         appendBubble('sdr', data.output);
         demoMessages.push({ role: 'assistant', content: data.output });
       } catch (e) {
