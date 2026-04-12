@@ -159,10 +159,50 @@ Crie os casos de teste em `prompt-tester/cases/seu-nicho.json` e rode com `--moc
 ## Variáveis de ambiente
 
 ```env
-ANTHROPIC_API_KEY=   # API da Anthropic (para rodar prompt-tester sem --mock)
-BACKEND_URL=         # URL do testn8nmetaapi
-BACKEND_API_KEY=     # chave compartilhada com o testn8nmetaapi
+ANTHROPIC_API_KEY=     # API da Anthropic (para rodar prompt-tester sem --mock)
+BACKEND_URL=           # URL do testn8nmetaapi
+BACKEND_API_KEY=       # chave compartilhada com o testn8nmetaapi
+WEBHOOK_SECRET=        # proteção do webhook ManyChat (opcional)
+
+# Autenticação (Supabase)
+SUPABASE_URL=          # Dashboard > Settings > API > Project URL
+SUPABASE_ANON_KEY=     # Dashboard > Settings > API > anon public
+SUPABASE_JWT_SECRET=   # Dashboard > Settings > API > JWT Settings > JWT Secret
 ```
+
+---
+
+## Configurando autenticação (Supabase)
+
+O prompt-tester tem uma tela de login/cadastro protegida por Supabase. Siga estes passos:
+
+### 1. Criar projeto no Supabase
+
+1. Acesse [supabase.com](https://supabase.com) e crie um projeto gratuito
+2. Anote a região mais próxima (ex: South America — São Paulo)
+3. Defina uma senha para o banco — guarde em lugar seguro
+
+### 2. Pegar as chaves
+
+No dashboard do projeto, vá em **Settings → API**:
+
+| Campo | Onde encontrar |
+|---|---|
+| `SUPABASE_URL` | "Project URL" |
+| `SUPABASE_ANON_KEY` | "Project API keys → anon public" |
+| `SUPABASE_JWT_SECRET` | "JWT Settings → JWT Secret" |
+
+### 3. Configurar no Render
+
+Em **Environment → Environment Variables**, adicione as três variáveis acima.
+
+Depois de salvo, o Render faz o redeploy automaticamente. Na próxima abertura, o app exibirá a tela de login.
+
+### 4. Cadastro de usuários
+
+Qualquer pessoa com o link pode criar uma conta na tela de login clicando em **"Criar agora"**. Não há aprovação manual — se quiser restringir, desative o signup em Supabase → **Authentication → Settings → Disable new user signups** e crie as contas manualmente pelo dashboard.
+
+> **Sem as variáveis Supabase configuradas**, o app funciona normalmente sem autenticação (útil para desenvolvimento local).
 
 ---
 

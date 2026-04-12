@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -173,6 +174,31 @@
     .wh-result.ok  { display: block; background: #071a0e; border: 1px solid #14532d; color: #4ade80; }
     .wh-result.err { display: block; background: #130808; border: 1px solid #3d1111; color: #f87171; }
 
+    /* ── AUTH OVERLAY ── */
+    .auth-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-overlay.hidden { display: none; }
+    .auth-box { width: 100%; max-width: 380px; }
+    .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; justify-content: center; }
+    .auth-logo-diamond { width: 36px; height: 36px; border-radius: 9px; background: var(--grad); display: grid; place-items: center; font-size: 17px; flex-shrink: 0; }
+    .auth-logo-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+    .auth-logo-name span { color: var(--text-2); font-weight: 400; }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+    .auth-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .auth-sub { font-size: 13px; color: var(--text-2); margin-bottom: 24px; }
+    .auth-field { margin-bottom: 14px; }
+    .auth-field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); margin-bottom: 7px; }
+    .auth-input { width: 100%; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; outline: none; transition: border-color 0.15s; }
+    .auth-input:focus { border-color: #7c3aed; }
+    .auth-input::placeholder { color: var(--muted); }
+    .auth-btn { width: 100%; margin-top: 20px; padding: 13px; border: none; border-radius: 9px; background: var(--grad); color: white; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .auth-btn:hover:not(:disabled) { opacity: 0.88; }
+    .auth-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .auth-error { margin-top: 12px; background: #130808; border: 1px solid #3d1111; border-radius: 8px; padding: 10px 13px; color: #f87171; font-family: 'DM Mono', monospace; font-size: 12px; display: none; }
+    .auth-error.show { display: block; }
+    .auth-toggle { margin-top: 18px; text-align: center; font-size: 13px; color: var(--text-2); }
+    .auth-toggle a { color: var(--text); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .auth-no-supabase { text-align: center; padding: 32px 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+
     /* Print */
     @media print {
       body { background: white; color: #111; }
@@ -189,6 +215,20 @@
   </style>
 </head>
 <body>
+
+  <!-- ── AUTH OVERLAY ── -->
+  <div class="auth-overlay hidden" id="authOverlay">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="auth-logo-diamond">◆</div>
+        <div class="auth-logo-name">instagram-sdr <span>/ prompt tester</span></div>
+      </div>
+      <div class="auth-card" id="authCard">
+        <!-- conteúdo injetado pelo JS -->
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
 
     <header>
@@ -348,20 +388,220 @@
   </div>
 
   <script>
+    // ── Auth state ──
+    let supabaseClient = null;
+    let authToken = null;
+
+    // ── Boot: check Supabase config, then init auth ──
+    async function boot() {
+      const config = await fetch('/api/config').then(r => r.json()).catch(() => ({}));
+
+      if (!config.supabaseUrl || !config.supabaseAnonKey) {
+        // Supabase not configured — run without auth (local dev)
+        await initApp(config);
+        return;
+      }
+
+      supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        authToken = session.access_token;
+        await initApp(config);
+      } else {
+        showAuthOverlay('login');
+      }
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          authToken = session.access_token;
+        } else {
+          authToken = null;
+          showAuthOverlay('login');
+        }
+      });
+    }
+
+    // ── Auth overlay ──
+    function showAuthOverlay(mode) {
+      document.getElementById('authOverlay').classList.remove('hidden');
+      renderAuthCard(mode);
+    }
+
+    function hideAuthOverlay() {
+      document.getElementById('authOverlay').classList.add('hidden');
+    }
+
+    function renderAuthCard(mode) {
+      const card = document.getElementById('authCard');
+      const isLogin = mode === 'login';
+      card.replaceChildren();
+
+      const title = document.createElement('div');
+      title.className = 'auth-title';
+      title.textContent = isLogin ? 'Entrar' : 'Criar conta';
+
+      const sub = document.createElement('div');
+      sub.className = 'auth-sub';
+      sub.textContent = isLogin ? 'Acesse com seu email e senha.' : 'Crie sua conta para acessar.';
+
+      const emailField = document.createElement('div');
+      emailField.className = 'auth-field';
+      const emailLabel = document.createElement('label');
+      emailLabel.textContent = 'Email';
+      const emailInput = document.createElement('input');
+      emailInput.className = 'auth-input';
+      emailInput.type = 'email';
+      emailInput.id = 'authEmail';
+      emailInput.placeholder = 'seu@email.com';
+      emailInput.autocomplete = 'email';
+      emailField.append(emailLabel, emailInput);
+
+      const passField = document.createElement('div');
+      passField.className = 'auth-field';
+      const passLabel = document.createElement('label');
+      passLabel.textContent = 'Senha';
+      const passInput = document.createElement('input');
+      passInput.className = 'auth-input';
+      passInput.type = 'password';
+      passInput.id = 'authPassword';
+      passInput.placeholder = isLogin ? '••••••••' : 'mínimo 6 caracteres';
+      passInput.autocomplete = isLogin ? 'current-password' : 'new-password';
+      passField.append(passLabel, passInput);
+
+      const errEl = document.createElement('div');
+      errEl.className = 'auth-error';
+      errEl.id = 'authError';
+
+      const btn = document.createElement('button');
+      btn.className = 'auth-btn';
+      btn.id = 'authSubmitBtn';
+      btn.textContent = isLogin ? 'Entrar' : 'Criar conta';
+      btn.addEventListener('click', () => submitAuth(mode));
+
+      const toggle = document.createElement('div');
+      toggle.className = 'auth-toggle';
+      const toggleText = document.createTextNode(isLogin ? 'Ainda não tem conta? ' : 'Já tem conta? ');
+      const toggleLink = document.createElement('a');
+      toggleLink.textContent = isLogin ? 'Criar agora' : 'Entrar';
+      toggleLink.addEventListener('click', () => renderAuthCard(isLogin ? 'register' : 'login'));
+      toggle.append(toggleText, toggleLink);
+
+      card.append(title, sub, emailField, passField, errEl, btn, toggle);
+
+      [emailInput, passInput].forEach(input => {
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(mode); });
+      });
+
+      setTimeout(() => emailInput.focus(), 50);
+    }
+
+    async function submitAuth(mode) {
+      const email    = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const errEl    = document.getElementById('authError');
+      const btn      = document.getElementById('authSubmitBtn');
+      errEl.classList.remove('show');
+
+      if (!email || !password) {
+        errEl.textContent = 'Preencha email e senha.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = mode === 'login' ? 'Entrando...' : 'Criando conta...';
+
+      const { error } = mode === 'login'
+        ? await supabaseClient.auth.signInWithPassword({ email, password })
+        : await supabaseClient.auth.signUp({ email, password });
+
+      if (error) {
+        btn.disabled = false;
+        btn.textContent = mode === 'login' ? 'Entrar' : 'Criar conta';
+        errEl.textContent = translateSupabaseError(error.message);
+        errEl.classList.add('show');
+        return;
+      }
+
+      if (mode === 'register') {
+        const { error: loginErr } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (loginErr) {
+          // Email confirmation required — show message
+          renderConfirmEmailCard(email);
+          return;
+        }
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        authToken = session.access_token;
+        hideAuthOverlay();
+        const config = await fetch('/api/config').then(r => r.json()).catch(() => ({}));
+        await initApp(config);
+      }
+    }
+
+    function renderConfirmEmailCard(email) {
+      const card = document.getElementById('authCard');
+      card.replaceChildren();
+
+      const title = document.createElement('div');
+      title.className = 'auth-title';
+      title.textContent = 'Confirme seu email';
+
+      const sub = document.createElement('div');
+      sub.className = 'auth-sub';
+      sub.style.lineHeight = '1.7';
+
+      const line1 = document.createElement('span');
+      line1.textContent = 'Enviamos um link de confirmação para ';
+      const bold = document.createElement('strong');
+      bold.textContent = email;
+      const line2 = document.createElement('span');
+      line2.textContent = '. Após confirmar, volte aqui e faça login.';
+      sub.append(line1, bold, line2);
+
+      const btn = document.createElement('button');
+      btn.className = 'auth-btn';
+      btn.style.marginTop = '20px';
+      btn.textContent = 'Ir para o login';
+      btn.addEventListener('click', () => renderAuthCard('login'));
+
+      card.append(title, sub, btn);
+    }
+
+    function translateSupabaseError(msg) {
+      if (msg.includes('Invalid login credentials')) return 'Email ou senha incorretos.';
+      if (msg.includes('Email not confirmed'))       return 'Confirme seu email antes de entrar.';
+      if (msg.includes('User already registered'))  return 'Este email já está cadastrado.';
+      if (msg.includes('Password should be'))       return 'A senha deve ter pelo menos 6 caracteres.';
+      return msg;
+    }
+
+    // ── Authenticated fetch wrapper ──
+    function apiFetch(url, options = {}) {
+      const headers = { ...(options.headers ?? {}) };
+      if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+      if (options.body) headers['Content-Type'] = 'application/json';
+      return fetch(url, { ...options, headers });
+    }
+
     // ── State ──
     let testerMode = 'mock';
     let demoMode   = 'mock';
     let demoMessages = [];
     let serverHasKey = false;
 
-    // ── Init ──
-    async function init() {
-      const [prompts, config] = await Promise.all([
-        fetch('/api/prompts').then(r => r.json()).catch(() => []),
-        fetch('/api/config').then(r => r.json()).catch(() => ({ hasApiKey: false })),
+    // ── Init app (after auth) ──
+    async function initApp(config) {
+      const [prompts, cases] = await Promise.all([
+        apiFetch('/api/prompts').then(r => r.json()).catch(() => []),
+        apiFetch('/api/cases').then(r => r.json()).catch(() => []),
       ]);
       fillSelect('promptSelect', prompts, '.md');
       fillSelect('demoPromptSelect', prompts, '.md');
+      fillSelect('casesSelect', cases, '.json');
 
       if (config.hasApiKey) {
         serverHasKey = true;
@@ -430,9 +670,8 @@
       document.getElementById('resultsSection').style.display = 'none';
 
       try {
-        const res = await fetch('/api/run', {
+        const res = await apiFetch('/api/run', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, cases, mock: testerMode === 'mock', apiKey: apiKey || undefined }),
         });
         const data = await res.json();
@@ -507,9 +746,8 @@
       input.disabled = true;
 
       try {
-        const res = await fetch('/api/chat', {
+        const res = await apiFetch('/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt,
             messages: demoMessages,
@@ -586,7 +824,7 @@
       loading.textContent = 'carregando...';
       content.appendChild(loading);
 
-      const runs = await fetch('/api/results').then(r => r.json()).catch(() => []);
+      const runs = await apiFetch('/api/results').then(r => r.json()).catch(() => []);
       content.replaceChildren();
 
       if (!runs.length) {
@@ -664,9 +902,8 @@
         const body = { handle, firstMessage, procedimento, janela, regiao };
         if (whatsapp) body.whatsapp = whatsapp;
 
-        const res = await fetch('/api/webhook/manychat', {
+        const res = await apiFetch('/api/webhook/manychat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
         const data = await res.json();
@@ -731,14 +968,7 @@
       }
     }
 
-    // Load cases only for tester tab
-    async function loadCases() {
-      const cases = await fetch('/api/cases').then(r => r.json()).catch(() => []);
-      fillSelect('casesSelect', cases, '.json');
-    }
-
-    init();
-    loadCases();
+    boot();
   </script>
 </body>
 </html>

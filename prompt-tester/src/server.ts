@@ -1,7 +1,8 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import jwt from "jsonwebtoken";
 import { loadCases, runTests, buildMockResponse, askAnthropic } from "./lib/core.js";
 import { sendQualifiedLead } from "./webhook/leadSender.js";
 
@@ -9,15 +10,39 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
+// ── Auth middleware ──────────────────────────────────────────────────────────
+// Skipped when SUPABASE_JWT_SECRET is not set (local dev without Supabase)
+function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const secret = process.env.SUPABASE_JWT_SECRET;
+  if (!secret) { next(); return; }
+
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    jwt.verify(header.slice(7), secret);
+    next();
+  } catch {
+    res.status(401).json({ error: "Token inválido ou expirado." });
+  }
+}
+
 app.get("/", (_req, res) => {
   res.sendFile(path.join(process.cwd(), "src", "ui.html"));
 });
 
 app.get("/api/config", (_req, res) => {
-  res.json({ hasApiKey: !!process.env.ANTHROPIC_API_KEY });
+  res.json({
+    hasApiKey: !!process.env.ANTHROPIC_API_KEY,
+    supabaseUrl: process.env.SUPABASE_URL ?? null,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? null,
+  });
 });
 
-app.get("/api/prompts", async (_req, res) => {
+app.get("/api/prompts", requireAuth, async (_req, res) => {
   try {
     const files = await readdir(path.join(process.cwd(), "prompts"));
     res.json(files.filter((f) => f.endsWith(".md")));
@@ -26,7 +51,7 @@ app.get("/api/prompts", async (_req, res) => {
   }
 });
 
-app.get("/api/cases", async (_req, res) => {
+app.get("/api/cases", requireAuth, async (_req, res) => {
   try {
     const files = await readdir(path.join(process.cwd(), "cases"));
     res.json(files.filter((f) => f.endsWith(".json")));
@@ -35,7 +60,7 @@ app.get("/api/cases", async (_req, res) => {
   }
 });
 
-app.post("/api/run", async (req, res) => {
+app.post("/api/run", requireAuth, async (req, res) => {
   try {
     const { prompt: promptFile, cases: casesFile, mock, apiKey: bodyApiKey, model } = req.body as {
       prompt: string;
@@ -73,8 +98,7 @@ app.post("/api/run", async (req, res) => {
   }
 });
 
-// Multi-turn chat for demo mode
-app.post("/api/chat", async (req, res) => {
+app.post("/api/chat", requireAuth, async (req, res) => {
   try {
     const { prompt: promptFile, messages, mock, apiKey: bodyApiKey, model } = req.body as {
       prompt: string;
@@ -114,8 +138,7 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// List past test runs
-app.get("/api/results", async (_req, res) => {
+app.get("/api/results", requireAuth, async (_req, res) => {
   try {
     const dir = path.join(process.cwd(), "results");
     const files = await readdir(dir).catch(() => []);
@@ -137,8 +160,7 @@ app.get("/api/results", async (_req, res) => {
   }
 });
 
-// ManyChat webhook — receives qualified lead and forwards to testn8nmetaapi
-app.post("/api/webhook/manychat", async (req, res) => {
+app.post("/api/webhook/manychat", requireAuth, async (req, res) => {
   const secret = req.headers["x-webhook-secret"];
   if (process.env.WEBHOOK_SECRET && secret !== process.env.WEBHOOK_SECRET) {
     res.status(401).json({ error: "Unauthorized" });
