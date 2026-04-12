@@ -200,14 +200,14 @@
     </header>
 
     <nav class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('tester')">Testar</button>
-      <button class="tab-btn" onclick="switchTab('demo')">Demo ao vivo</button>
+      <button class="tab-btn" onclick="switchTab('tester')">Validar Prompt</button>
+      <button class="tab-btn active" onclick="switchTab('demo')">Demo ao vivo</button>
       <button class="tab-btn" onclick="switchTab('historico')">Histórico</button>
-      <button class="tab-btn" onclick="switchTab('webhook')">Enviar Lead</button>
+      <button class="tab-btn" onclick="switchTab('webhook')">Testar Integração</button>
     </nav>
 
     <!-- ── TAB: TESTAR ── -->
-    <div id="tab-tester" class="tab-content active">
+    <div id="tab-tester" class="tab-content">
       <div class="card">
         <div class="form-row">
           <div class="field">
@@ -219,7 +219,7 @@
             <div class="select-wrap"><select id="casesSelect"><option value="">carregando...</option></select></div>
           </div>
         </div>
-        <div class="field">
+        <div class="field" id="testerModeField">
           <label>Modo</label>
           <div class="mode-wrap">
             <button class="mode-btn active" data-mode="mock" onclick="setMode('mock','tester')">◎ &nbsp;Simulado</button>
@@ -254,14 +254,14 @@
     </div>
 
     <!-- ── TAB: DEMO ── -->
-    <div id="tab-demo" class="tab-content">
+    <div id="tab-demo" class="tab-content active">
       <div class="card" style="padding-bottom:18px">
         <div class="demo-config">
           <div class="field">
             <label>Prompt</label>
             <div class="select-wrap"><select id="demoPromptSelect"><option value="">carregando...</option></select></div>
           </div>
-          <div class="field" style="flex:0 0 auto">
+          <div class="field" id="demoModeField" style="flex:0 0 auto">
             <label>Modo</label>
             <div class="mode-wrap">
               <button class="mode-btn active" data-mode="mock" onclick="setMode('mock','demo')">◎ &nbsp;Simulado</button>
@@ -318,16 +318,16 @@
           </div>
           <div class="wh-row">
             <div class="field">
-              <label>Procedimento</label>
+              <label>Procedimento de interesse</label>
               <input type="text" id="wh-procedimento" placeholder="Ex: limpeza de pele">
             </div>
             <div class="field">
-              <label>Janela de decisão</label>
+              <label>Quando quer fazer?</label>
               <input type="text" id="wh-janela" placeholder="Ex: este mês">
             </div>
           </div>
           <div class="field">
-            <label>Região</label>
+            <label>Cidade / Região</label>
             <input type="text" id="wh-regiao" placeholder="Ex: Vila Madalena, SP">
           </div>
         </div>
@@ -352,14 +352,24 @@
     let testerMode = 'mock';
     let demoMode   = 'mock';
     let demoMessages = [];
+    let serverHasKey = false;
 
     // ── Init ──
     async function init() {
-      const [prompts] = await Promise.all([
+      const [prompts, config] = await Promise.all([
         fetch('/api/prompts').then(r => r.json()).catch(() => []),
+        fetch('/api/config').then(r => r.json()).catch(() => ({ hasApiKey: false })),
       ]);
       fillSelect('promptSelect', prompts, '.md');
       fillSelect('demoPromptSelect', prompts, '.md');
+
+      if (config.hasApiKey) {
+        serverHasKey = true;
+        testerMode = 'real';
+        demoMode = 'real';
+        document.getElementById('testerModeField').style.display = 'none';
+        document.getElementById('demoModeField').style.display = 'none';
+      }
     }
 
     function fillSelect(id, files, ext) {
@@ -412,7 +422,7 @@
       errBox.classList.remove('show');
 
       if (!prompt || !cases) return showErr(errBox, 'Selecione prompt e casos.');
-      if (testerMode === 'real' && !apiKey) return showErr(errBox, 'Informe a API Key para o modo real.');
+      if (testerMode === 'real' && !apiKey && !serverHasKey) return showErr(errBox, 'Informe a API Key para o modo real.');
 
       const btn = document.getElementById('runBtn');
       setLoading(btn, true);
@@ -483,7 +493,7 @@
 
       if (!text) return;
       if (!prompt) return showErr(errBox, 'Selecione um prompt.');
-      if (demoMode === 'real' && !apiKey) return showErr(errBox, 'Informe a API Key para o modo real.');
+      if (demoMode === 'real' && !apiKey && !serverHasKey) return showErr(errBox, 'Informe a API Key para o modo real.');
 
       input.value = '';
       document.getElementById('chatEmpty')?.remove();

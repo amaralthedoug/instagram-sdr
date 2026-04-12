@@ -13,6 +13,10 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(process.cwd(), "src", "ui.html"));
 });
 
+app.get("/api/config", (_req, res) => {
+  res.json({ hasApiKey: !!process.env.ANTHROPIC_API_KEY });
+});
+
 app.get("/api/prompts", async (_req, res) => {
   try {
     const files = await readdir(path.join(process.cwd(), "prompts"));
