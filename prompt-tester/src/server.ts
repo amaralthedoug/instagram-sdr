@@ -201,6 +201,77 @@ app.post("/api/webhook/manychat", requireAuth, async (req, res) => {
   }
 });
 
+app.post("/api/test-connection", requireAuth, async (req, res) => {
+  const { provider, apiKey, model } = req.body as {
+    provider: string;
+    apiKey: string;
+    model: string;
+  };
+
+  if (!provider || !apiKey || !model) {
+    res.status(400).json({ ok: false, error: "provider, apiKey e model são obrigatórios." });
+    return;
+  }
+
+  try {
+    let fetchRes: Awaited<ReturnType<typeof fetch>>;
+
+    if (provider === "anthropic") {
+      fetchRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 5,
+          messages: [{ role: "user", content: "ping" }],
+        }),
+      });
+    } else if (provider === "openai") {
+      fetchRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: 5,
+          messages: [{ role: "user", content: "ping" }],
+        }),
+      });
+    } else if (provider === "gemini") {
+      fetchRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "ping" }] }],
+            generationConfig: { maxOutputTokens: 5 },
+          }),
+        }
+      );
+    } else {
+      res.json({ ok: false, error: `Provedor desconhecido: ${provider}` });
+      return;
+    }
+
+    if (!fetchRes.ok) {
+      const body = await fetchRes.json().catch(() => ({})) as { error?: { message?: string }; message?: string };
+      res.json({ ok: false, error: body.error?.message ?? body.message ?? `HTTP ${fetchRes.status}` });
+      return;
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.json({ ok: false, error: (err as Error).message });
+  }
+});
+
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, () => {
   console.log(`\n  ◆ Prompt Tester`);

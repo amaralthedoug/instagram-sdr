@@ -199,6 +199,59 @@
     .auth-toggle a { color: var(--text); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .auth-no-supabase { text-align: center; padding: 32px 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
 
+    /* ── HEADER BUTTONS ── */
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .header-btn { background: none; border: 1px solid var(--border-2); border-radius: 6px; color: var(--muted); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; padding: 4px 10px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+    .header-btn:hover { color: var(--text); border-color: var(--text-2); }
+
+    /* ── WIZARD OVERLAY ── */
+    .wizard-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 90; display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto; }
+    .wizard-overlay.hidden { display: none; }
+    .wizard-box { width: 100%; max-width: 420px; }
+    .wizard-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; justify-content: center; }
+    .wizard-logo-diamond { width: 34px; height: 34px; border-radius: 9px; background: var(--grad); display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+    .wizard-logo-name { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+    .wizard-logo-name span { color: var(--text-2); font-weight: 400; }
+    .wizard-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+    .wizard-step { font-family: 'DM Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 6px; }
+    .wizard-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .wizard-sub { font-size: 13px; color: var(--text-2); margin-bottom: 24px; line-height: 1.6; }
+    .wizard-providers { display: flex; gap: 8px; margin-bottom: 20px; }
+    .wizard-provider-btn { flex: 1; padding: 10px 8px; border: 1px solid var(--border-2); border-radius: 10px; background: var(--surface-2); color: var(--text-2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; text-align: center; }
+    .wizard-provider-btn:hover { border-color: #7c3aed; color: var(--text); }
+    .wizard-provider-btn.active { border-color: #7c3aed; background: rgba(124,58,237,0.12); color: var(--text); }
+    .wizard-field { margin-bottom: 16px; }
+    .wizard-field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); margin-bottom: 7px; }
+    .wizard-input-wrap { position: relative; }
+    .wizard-input { width: 100%; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12.5px; padding: 10px 40px 10px 12px; outline: none; transition: border-color 0.15s; appearance: none; }
+    .wizard-input:focus { border-color: #7c3aed; }
+    .wizard-input::placeholder { color: var(--muted); }
+    .wizard-input.select-pad { padding-right: 30px; }
+    .wizard-eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px; line-height: 1; }
+    .wizard-eye-btn:hover { color: var(--text-2); }
+    .wizard-hint { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 5px; min-height: 18px; }
+    .wizard-hint.ok  { color: var(--pass); }
+    .wizard-hint.err { color: var(--fail); }
+    .wizard-test-row { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+    .wizard-test-btn { padding: 9px 16px; border: 1px solid var(--border-2); border-radius: 8px; background: none; color: var(--text-2); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 7px; }
+    .wizard-test-btn:hover:not(:disabled) { border-color: var(--text-2); color: var(--text); }
+    .wizard-test-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .wizard-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; gap: 12px; }
+    .wizard-next-btn { flex: 1; padding: 13px; border: none; border-radius: 9px; background: var(--grad); color: white; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+    .wizard-next-btn:hover:not(:disabled) { opacity: 0.88; }
+    .wizard-next-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .wizard-skip-link { font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; user-select: none; }
+    .wizard-skip-link:hover { color: var(--text-2); }
+    .wizard-summary { margin: 20px 0; }
+    .wizard-summary-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .wizard-summary-item:last-child { border-bottom: none; }
+    .wizard-summary-icon { font-size: 16px; min-width: 24px; text-align: center; color: var(--text-2); }
+    .wizard-summary-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 2px; }
+    .wizard-summary-value { font-family: 'DM Mono', monospace; font-size: 12.5px; color: var(--text); word-break: break-all; }
+    .wizard-footer { text-align: center; margin-top: 18px; }
+    .wizard-footer-link { font-size: 12px; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .wizard-footer-link:hover { color: var(--text-2); }
+
     /* Print */
     @media print {
       body { background: white; color: #111; }
@@ -229,6 +282,22 @@
     </div>
   </div>
 
+  <!-- ── WIZARD OVERLAY ── -->
+  <div class="wizard-overlay hidden" id="wizardOverlay">
+    <div class="wizard-box">
+      <div class="wizard-logo">
+        <div class="wizard-logo-diamond">◆</div>
+        <div class="wizard-logo-name">instagram-sdr <span>/ configuração</span></div>
+      </div>
+      <div class="wizard-card" id="wizardCard">
+        <!-- injetado pelo JS -->
+      </div>
+      <div class="wizard-footer">
+        <span id="wizardLogoutLink" class="wizard-footer-link">Sair da conta</span>
+      </div>
+    </div>
+  </div>
+
   <div class="layout">
 
     <header>
@@ -236,7 +305,11 @@
         <div class="logo-diamond">◆</div>
         <div class="logo-name">instagram-sdr <span>/ prompt tester</span></div>
       </div>
-      <div class="version-tag">v0.2</div>
+      <div class="header-right">
+        <button id="settingsBtn" class="header-btn" title="Configurações" style="display:none">⚙ Config</button>
+        <button id="logoutBtn" class="header-btn" title="Sair da conta" style="display:none">Sair</button>
+        <div class="version-tag">v0.2</div>
+      </div>
     </header>
 
     <nav class="tab-nav">
@@ -397,7 +470,7 @@
       const config = await fetch('/api/config').then(r => r.json()).catch(() => ({}));
 
       if (!config.supabaseUrl || !config.supabaseAnonKey) {
-        // Supabase not configured — run without auth (local dev)
+        // Local dev — sem auth, sem wizard obrigatório
         await initApp(config);
         return;
       }
@@ -407,7 +480,7 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         authToken = session.access_token;
-        await initApp(config);
+        await checkWizardAndInit(config);
       } else {
         showAuthOverlay('login');
       }
@@ -417,9 +490,50 @@
           authToken = session.access_token;
         } else {
           authToken = null;
+          hideWizard();
           showAuthOverlay('login');
         }
       });
+    }
+
+    async function checkWizardAndInit(config) {
+      const saved = localStorage.getItem(WIZARD_KEY);
+      if (saved) {
+        try { wizardConfig = { ...wizardConfig, ...JSON.parse(saved) }; } catch {}
+      }
+      await initApp(config);
+      setupHeaderButtons();
+      if (!saved && !config.hasApiKey) {
+        showWizard();
+      } else if (saved) {
+        applyWizardConfig(wizardConfig);
+      }
+    }
+
+    function setupHeaderButtons() {
+      const settingsBtn = document.getElementById('settingsBtn');
+      const logoutBtn   = document.getElementById('logoutBtn');
+      const wizardLogout = document.getElementById('wizardLogoutLink');
+
+      if (settingsBtn) {
+        settingsBtn.style.display = 'flex';
+        settingsBtn.addEventListener('click', () => {
+          const saved = localStorage.getItem(WIZARD_KEY);
+          if (saved) {
+            try { wizardConfig = { ...wizardConfig, ...JSON.parse(saved) }; } catch {}
+          }
+          showWizard();
+        });
+      }
+
+      if (logoutBtn && supabaseClient) {
+        logoutBtn.style.display = 'flex';
+        logoutBtn.addEventListener('click', () => supabaseClient.auth.signOut());
+      }
+
+      if (wizardLogout && supabaseClient) {
+        wizardLogout.addEventListener('click', () => supabaseClient.auth.signOut());
+      }
     }
 
     // ── Auth overlay ──
@@ -538,7 +652,7 @@
         authToken = session.access_token;
         hideAuthOverlay();
         const config = await fetch('/api/config').then(r => r.json()).catch(() => ({}));
-        await initApp(config);
+        await checkWizardAndInit(config);
       }
     }
 
@@ -672,7 +786,13 @@
       try {
         const res = await apiFetch('/api/run', {
           method: 'POST',
-          body: JSON.stringify({ prompt, cases, mock: testerMode === 'mock', apiKey: apiKey || undefined }),
+          body: JSON.stringify({
+            prompt,
+            cases,
+            mock: testerMode === 'mock',
+            apiKey: apiKey || wizardConfig.apiKey || undefined,
+            model: wizardConfig.model || undefined,
+          }),
         });
         const data = await res.json();
         if (!res.ok) return showErr(errBox, data.error || 'Erro desconhecido.');
@@ -752,7 +872,8 @@
             prompt,
             messages: demoMessages,
             mock: demoMode === 'mock',
-            apiKey: apiKey || undefined,
+            apiKey: apiKey || wizardConfig.apiKey || undefined,
+            model: wizardConfig.model || undefined,
           }),
         });
         const data = await res.json();
@@ -965,6 +1086,267 @@
         btn.appendChild(document.createTextNode(' Rodando...'));
       } else {
         btn.appendChild(document.createTextNode('▶ \u00a0Rodar simulação'));
+      }
+    }
+
+    // ── Wizard ──────────────────────────────────────────────────────────────
+    const WIZARD_KEY = 'sdr-ai-config';
+
+    const WIZARD_MODELS = {
+      anthropic: [
+        { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5 — rápido e econômico' },
+        { id: 'claude-sonnet-4-6',          label: 'Sonnet 4.6 — equilibrado' },
+        { id: 'claude-opus-4-6',            label: 'Opus 4.6 — mais poderoso' },
+      ],
+      openai: [
+        { id: 'gpt-4o-mini', label: 'GPT-4o mini — rápido e econômico' },
+        { id: 'gpt-4o',      label: 'GPT-4o — equilibrado' },
+      ],
+      gemini: [
+        { id: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash — rápido' },
+        { id: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro — avançado' },
+      ],
+    };
+
+    let wizardConfig = { provider: 'anthropic', apiKey: '', model: 'claude-haiku-4-5-20251001' };
+    let wizardTestPassed = false;
+
+    // Tiny DOM helper to avoid repetitive createElement boilerplate
+    function mkEl(tag, attrs = {}) {
+      const e = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        if (k === 'textContent') e.textContent = String(v);
+        else if (k === 'className') e.className = String(v);
+        else if (k === 'type') e.type = String(v);
+        else if (k === 'disabled') e.disabled = Boolean(v);
+        else if (k === 'selected') e.selected = Boolean(v);
+        else if (k === 'title') e.title = String(v);
+        else e.setAttribute(k, String(v));
+      }
+      return e;
+    }
+
+    function showWizard() {
+      document.getElementById('wizardOverlay').classList.remove('hidden');
+      renderWizardStep1();
+    }
+
+    function hideWizard() {
+      document.getElementById('wizardOverlay').classList.add('hidden');
+    }
+
+    function getKeyPlaceholder(provider) {
+      if (provider === 'openai')  return 'sk-...';
+      if (provider === 'gemini')  return 'AIza...';
+      return 'sk-ant-...';
+    }
+
+    function getKeyHint(provider) {
+      if (provider === 'openai')  return 'Começa com sk-';
+      if (provider === 'gemini')  return 'Começa com AIza';
+      return 'Começa com sk-ant-';
+    }
+
+    function updateWizardHint(msg, type = '') {
+      const hint = document.getElementById('wizardTestHint');
+      if (!hint) return;
+      hint.textContent = msg;
+      hint.className = 'wizard-hint' + (type ? ' ' + type : '');
+    }
+
+    function renderWizardStep1() {
+      const card = document.getElementById('wizardCard');
+      card.replaceChildren();
+      wizardTestPassed = false;
+
+      const stepEl  = mkEl('div', { className: 'wizard-step', textContent: 'Passo 1 de 2 — Inteligência Artificial' });
+      const titleEl = mkEl('div', { className: 'wizard-title', textContent: 'Configurar IA' });
+      const subEl   = mkEl('div', { className: 'wizard-sub',   textContent: 'Escolha o provedor e cole a chave de API da sua conta.' });
+
+      // Provider selector
+      const providerWrap = mkEl('div', { className: 'wizard-providers' });
+      [{ id: 'anthropic', label: 'Anthropic' }, { id: 'openai', label: 'OpenAI' }, { id: 'gemini', label: 'Gemini' }].forEach(p => {
+        const btn = mkEl('button', {
+          type: 'button',
+          className: 'wizard-provider-btn' + (wizardConfig.provider === p.id ? ' active' : ''),
+          textContent: p.label,
+        });
+        btn.addEventListener('click', () => {
+          wizardConfig.provider = p.id;
+          wizardConfig.model = WIZARD_MODELS[p.id][0].id;
+          wizardTestPassed = false;
+          renderWizardStep1();
+        });
+        providerWrap.appendChild(btn);
+      });
+
+      // API Key field
+      const keyField = mkEl('div', { className: 'wizard-field' });
+      const keyLabel = mkEl('label', { textContent: 'Chave de API' });
+      const keyWrap  = mkEl('div', { className: 'wizard-input-wrap' });
+      const keyInput = mkEl('input', { type: 'password', className: 'wizard-input', id: 'wizardApiKey' });
+      keyInput.placeholder = getKeyPlaceholder(wizardConfig.provider);
+      keyInput.value = wizardConfig.apiKey;
+      const eyeBtn = mkEl('button', { type: 'button', className: 'wizard-eye-btn', title: 'Mostrar/ocultar', textContent: '◉' });
+      let keyVisible = false;
+      eyeBtn.addEventListener('click', () => {
+        keyVisible = !keyVisible;
+        keyInput.type = keyVisible ? 'text' : 'password';
+        eyeBtn.textContent = keyVisible ? '◎' : '◉';
+      });
+      keyInput.addEventListener('input', () => {
+        wizardConfig.apiKey = keyInput.value.trim();
+        wizardTestPassed = false;
+        updateWizardHint('');
+        const nb = document.getElementById('wizardNextBtn1');
+        if (nb) nb.disabled = true;
+      });
+      keyWrap.append(keyInput, eyeBtn);
+      const keyHint = mkEl('div', { className: 'wizard-hint', textContent: getKeyHint(wizardConfig.provider) });
+      keyField.append(keyLabel, keyWrap, keyHint);
+
+      // Model selector
+      const modelField = mkEl('div', { className: 'wizard-field' });
+      const modelLabel = mkEl('label', { textContent: 'Modelo' });
+      const modelWrap  = mkEl('div', { className: 'select-wrap' });
+      const modelSel   = mkEl('select', { className: 'wizard-input select-pad', id: 'wizardModel' });
+      WIZARD_MODELS[wizardConfig.provider].forEach(m => {
+        const opt = mkEl('option', { value: m.id, textContent: m.label });
+        if (m.id === wizardConfig.model) opt.selected = true;
+        modelSel.appendChild(opt);
+      });
+      modelSel.addEventListener('change', () => {
+        wizardConfig.model = modelSel.value;
+        wizardTestPassed = false;
+        updateWizardHint('');
+        const nb = document.getElementById('wizardNextBtn1');
+        if (nb) nb.disabled = true;
+      });
+      modelWrap.appendChild(modelSel);
+      modelField.append(modelLabel, modelWrap);
+
+      // Test button row
+      const testRow  = mkEl('div', { className: 'wizard-test-row' });
+      const testBtn  = mkEl('button', { type: 'button', className: 'wizard-test-btn', id: 'wizardTestBtn', textContent: '⚡ Testar conexão' });
+      const testHint = mkEl('div', { className: 'wizard-hint', id: 'wizardTestHint' });
+      testBtn.addEventListener('click', runConnectionTest);
+      testRow.append(testBtn, testHint);
+
+      // Actions
+      const actions  = mkEl('div', { className: 'wizard-actions' });
+      const skipLink = mkEl('span', { className: 'wizard-skip-link', textContent: 'Pular' });
+      skipLink.addEventListener('click', renderWizardStep2);
+      const nextBtn  = mkEl('button', { type: 'button', className: 'wizard-next-btn', id: 'wizardNextBtn1', textContent: 'Próximo →', disabled: true });
+      nextBtn.addEventListener('click', renderWizardStep2);
+      actions.append(skipLink, nextBtn);
+
+      card.append(stepEl, titleEl, subEl, providerWrap, keyField, modelField, testRow, actions);
+      keyInput.focus();
+    }
+
+    async function runConnectionTest() {
+      const keyInput = document.getElementById('wizardApiKey');
+      const modelSel = document.getElementById('wizardModel');
+      const testBtn  = document.getElementById('wizardTestBtn');
+      const nextBtn  = document.getElementById('wizardNextBtn1');
+      const apiKey   = keyInput.value.trim();
+      const model    = modelSel.value;
+
+      wizardConfig.apiKey = apiKey;
+      wizardConfig.model  = model;
+      wizardTestPassed    = false;
+      if (nextBtn) nextBtn.disabled = true;
+
+      if (!apiKey) {
+        updateWizardHint('Informe a chave de API antes de testar.', 'err');
+        return;
+      }
+
+      // Loading state
+      testBtn.disabled = true;
+      testBtn.replaceChildren();
+      const sp = document.createElement('div');
+      sp.className = 'spinner';
+      sp.style.cssText = 'border-color:var(--border-2);border-top-color:var(--text-2)';
+      testBtn.append(sp, document.createTextNode('\u00a0Testando...'));
+      updateWizardHint('');
+
+      try {
+        const res  = await apiFetch('/api/test-connection', {
+          method: 'POST',
+          body: JSON.stringify({ provider: wizardConfig.provider, apiKey, model }),
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          wizardTestPassed = true;
+          updateWizardHint('✓ Conexão estabelecida com sucesso.', 'ok');
+          if (nextBtn) nextBtn.disabled = false;
+        } else {
+          updateWizardHint('⚠ ' + (data.error || 'Falha na conexão.'), 'err');
+        }
+      } catch (e) {
+        updateWizardHint('⚠ ' + e.message, 'err');
+      } finally {
+        testBtn.disabled = false;
+        testBtn.textContent = '⚡ Testar conexão';
+      }
+    }
+
+    function renderWizardStep2() {
+      const card = document.getElementById('wizardCard');
+      card.replaceChildren();
+
+      const LABELS = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Gemini' };
+      const maskedKey = wizardConfig.apiKey
+        ? wizardConfig.apiKey.slice(0, 10) + '••••••••••'
+        : '(não definida)';
+
+      const stepEl  = mkEl('div', { className: 'wizard-step', textContent: 'Passo 2 de 2 — Confirmação' });
+      const titleEl = mkEl('div', { className: 'wizard-title', textContent: 'Tudo pronto!' });
+      const subEl   = mkEl('div', { className: 'wizard-sub',   textContent: 'Configuração salva. Confira o resumo abaixo.' });
+
+      const summary = mkEl('div', { className: 'wizard-summary' });
+      [
+        { icon: '🤖', label: 'Provedor', value: LABELS[wizardConfig.provider] || wizardConfig.provider },
+        { icon: '⚡', label: 'Modelo',   value: wizardConfig.model },
+        { icon: '🔑', label: 'API Key',  value: maskedKey },
+        { icon: wizardTestPassed ? '✅' : '—', label: 'Conexão', value: wizardTestPassed ? 'Testada e aprovada' : 'Não testada' },
+      ].forEach(item => {
+        const row   = mkEl('div', { className: 'wizard-summary-item' });
+        const icon  = mkEl('div', { className: 'wizard-summary-icon', textContent: item.icon });
+        const info  = mkEl('div');
+        const label = mkEl('div', { className: 'wizard-summary-label', textContent: item.label });
+        const value = mkEl('div', { className: 'wizard-summary-value', textContent: item.value });
+        info.append(label, value);
+        row.append(icon, info);
+        summary.appendChild(row);
+      });
+
+      const actions  = mkEl('div', { className: 'wizard-actions' });
+      const backLink = mkEl('span', { className: 'wizard-skip-link', textContent: '← Voltar' });
+      backLink.addEventListener('click', renderWizardStep1);
+      const doneBtn  = mkEl('button', { type: 'button', className: 'wizard-next-btn', textContent: 'Começar →' });
+      doneBtn.addEventListener('click', () => {
+        localStorage.setItem(WIZARD_KEY, JSON.stringify(wizardConfig));
+        hideWizard();
+        applyWizardConfig(wizardConfig);
+      });
+      actions.append(backLink, doneBtn);
+
+      card.append(stepEl, titleEl, subEl, summary, actions);
+    }
+
+    function applyWizardConfig(cfg) {
+      const keyEl     = document.getElementById('apiKey');
+      const demoKeyEl = document.getElementById('demoApiKey');
+      if (keyEl     && cfg.apiKey) keyEl.value     = cfg.apiKey;
+      if (demoKeyEl && cfg.apiKey) demoKeyEl.value = cfg.apiKey;
+
+      // Auto-switch to real mode when a key is configured and server has none
+      if (cfg.apiKey && !serverHasKey) {
+        setMode('real', 'tester');
+        setMode('real', 'demo');
       }
     }
 
